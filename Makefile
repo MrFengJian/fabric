@@ -430,6 +430,12 @@ docker-tag-stable: $(IMAGES:%=%-docker-tag-stable)
 	$(eval TARGET = ${patsubst %-docker-tag-stable,%,${@}})
 	docker tag $(DOCKER_NS)/fabric-$(TARGET):$(DOCKER_TAG) $(DOCKER_NS)/fabric-$(TARGET):stable
 
+docker-tag-version: $(IMAGES:%=%-docker-tag-version)
+
+%-docker-tag-version:
+	$(eval TARGET = ${patsubst %-docker-tag-version,%,${@}})
+	docker tag $(DOCKER_NS)/fabric-$(TARGET):$(DOCKER_TAG) $(DOCKER_NS)/fabric-$(TARGET):$(BASE_VERSION)
+
 .PHONY: clean
 clean: docker-clean unit-test-clean release-clean
 	-@rm -rf $(BUILD_DIR)
