@@ -7,7 +7,6 @@ package ca
 
 import (
 	"crypto"
-	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -39,18 +38,18 @@ type CA struct {
 
 // NewCA creates an instance of CA and saves the signing key pair in
 // baseDir/name
-func NewCA(baseDir, org, name, country, province, locality, orgUnit, streetAddress, postalCode string) (*CA, error) {
+func NewCA(baseDir, org, name, country, province, locality, orgUnit, streetAddress, postalCode string, algo string) (*CA, error) {
 
 	var response error
 	var ca *CA
 
 	err := os.MkdirAll(baseDir, 0755)
 	if err == nil {
-		priv, signer, err := csp.GeneratePrivateKey(baseDir)
+		priv, signer, err := csp.GeneratePrivateKey(baseDir, algo)
 		response = err
 		if err == nil {
 			// get public signing certificate
-			ecPubKey, err := csp.GetECPublicKey(priv)
+			pubKey, err := csp.GetPublicKey(priv)
 			response = err
 			if err == nil {
 				template := x509Template()
@@ -72,8 +71,8 @@ func NewCA(baseDir, org, name, country, province, locality, orgUnit, streetAddre
 				template.Subject = subject
 				template.SubjectKeyId = priv.SKI()
 
-				x509Cert, err := genCertificateECDSA(baseDir, name, &template, &template,
-					ecPubKey, signer)
+				x509Cert, err := genCertificate(baseDir, name, &template, &template,
+					pubKey, signer)
 				response = err
 				if err == nil {
 					ca = &CA{
@@ -96,7 +95,7 @@ func NewCA(baseDir, org, name, country, province, locality, orgUnit, streetAddre
 
 // SignCertificate creates a signed certificate based on a built-in template
 // and saves it in baseDir/name
-func (ca *CA) SignCertificate(baseDir, name string, ous, sans []string, pub *ecdsa.PublicKey,
+func (ca *CA) SignCertificate(baseDir, name string, ous, sans []string, pub interface{},
 	ku x509.KeyUsage, eku []x509.ExtKeyUsage) (*x509.Certificate, error) {
 
 	template := x509Template()
@@ -120,7 +119,7 @@ func (ca *CA) SignCertificate(baseDir, name string, ous, sans []string, pub *ecd
 		}
 	}
 
-	cert, err := genCertificateECDSA(baseDir, name, &template, ca.SignCert,
+	cert, err := genCertificate(baseDir, name, &template, ca.SignCert,
 		pub, ca.Signer)
 
 	if err != nil {
@@ -188,7 +187,7 @@ func x509Template() x509.Certificate {
 }
 
 // generate a signed X509 certificate using ECDSA
-func genCertificateECDSA(baseDir, name string, template, parent *x509.Certificate, pub *ecdsa.PublicKey,
+func genCertificate(baseDir, name string, template, parent *x509.Certificate, pub interface{},
 	priv interface{}) (*x509.Certificate, error) {
 
 	//create the x509 public cert
@@ -217,8 +216,8 @@ func genCertificateECDSA(baseDir, name string, template, parent *x509.Certificat
 	return x509Cert, nil
 }
 
-// LoadCertificateECDSA load a ecdsa cert from a file in cert path
-func LoadCertificateECDSA(certPath string) (*x509.Certificate, error) {
+// LoadCertificate load a ecdsa or rsa cert from a file in cert path
+func LoadCertificate(certPath string) (*x509.Certificate, error) {
 	var cert *x509.Certificate
 	var err error
 

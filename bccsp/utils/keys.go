@@ -74,6 +74,14 @@ func PrivateKeyToDER(privateKey *ecdsa.PrivateKey) ([]byte, error) {
 	return x509.MarshalECPrivateKey(privateKey)
 }
 
+// RsaPrivateKeyToDER marshals a rsa private key to der
+func RsaPrivateKeyToDER(privateKey *rsa.PrivateKey) ([]byte, error) {
+	if privateKey == nil {
+		return nil, errors.New("Invalid rsa private key. It must be different from nil.")
+	}
+	return x509.MarshalPKCS1PrivateKey(privateKey), nil
+}
+
 // PrivateKeyToPEM converts the private key to PEM format.
 // EC private keys are converted to PKCS#8 format.
 // RSA private keys are converted to PKCS#1 format.

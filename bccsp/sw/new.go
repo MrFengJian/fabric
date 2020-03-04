@@ -101,6 +101,8 @@ func NewWithParams(securityLevel int, hashFamily string, keyStore bccsp.KeyStore
 	swbccsp.AddWrapper(reflect.TypeOf(&bccsp.ECDSAGoPublicKeyImportOpts{}), &ecdsaGoPublicKeyImportOptsKeyImporter{})
 	swbccsp.AddWrapper(reflect.TypeOf(&bccsp.RSAGoPublicKeyImportOpts{}), &rsaGoPublicKeyImportOptsKeyImporter{})
 	swbccsp.AddWrapper(reflect.TypeOf(&bccsp.X509PublicKeyImportOpts{}), &x509PublicKeyImportOptsKeyImporter{bccsp: swbccsp})
+	// 添加RSA私钥导入支持
+	swbccsp.AddWrapper(reflect.TypeOf(&bccsp.RSA2048PrivateKeyImportOpts{}), &rsaPrivatekeyImportOptsKeyImporter{})
 
 	return swbccsp, nil
 }

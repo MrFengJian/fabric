@@ -7,7 +7,6 @@ package csp
 
 import (
 	"crypto"
-	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/pem"
 	"io/ioutil"
@@ -79,7 +78,7 @@ func LoadPrivateKey(keystorePath string) (bccsp.Key, crypto.Signer, error) {
 }
 
 // GeneratePrivateKey creates a private key and stores it in keystorePath
-func GeneratePrivateKey(keystorePath string) (bccsp.Key,
+func GeneratePrivateKey(keystorePath string, algo string) (bccsp.Key,
 	crypto.Signer, error) {
 
 	var err error
@@ -99,8 +98,14 @@ func GeneratePrivateKey(keystorePath string) (bccsp.Key,
 	}
 	csp, err := factory.GetBCCSPFromOpts(opts)
 	if err == nil {
+		// 根据算法参数设置私钥生成参数，目前只使用RSA2048
+		var opt bccsp.KeyGenOpts
+		opt = &bccsp.ECDSAP256KeyGenOpts{Temporary: false}
+		if strings.ToUpper(algo) == bccsp.RSA {
+			opt = &bccsp.RSAKeyGenOpts{Temporary: false}
+		}
 		// generate a key
-		priv, err = csp.KeyGen(&bccsp.ECDSAP256KeyGenOpts{Temporary: false})
+		priv, err = csp.KeyGen(opt)
 		if err == nil {
 			// create a crypto.Signer
 			s, err = signer.New(csp, priv)
@@ -109,7 +114,7 @@ func GeneratePrivateKey(keystorePath string) (bccsp.Key,
 	return priv, s, err
 }
 
-func GetECPublicKey(priv bccsp.Key) (*ecdsa.PublicKey, error) {
+func GetPublicKey(priv bccsp.Key) (interface{}, error) {
 
 	// get the public key
 	pubKey, err := priv.PublicKey()
@@ -122,9 +127,9 @@ func GetECPublicKey(priv bccsp.Key) (*ecdsa.PublicKey, error) {
 		return nil, err
 	}
 	// unmarshal using pkix
-	ecPubKey, err := x509.ParsePKIXPublicKey(pubKeyBytes)
+	lowLevelKey, err := x509.ParsePKIXPublicKey(pubKeyBytes)
 	if err != nil {
 		return nil, err
 	}
-	return ecPubKey.(*ecdsa.PublicKey), nil
+	return lowLevelKey, nil
 }

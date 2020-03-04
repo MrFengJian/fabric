@@ -17,9 +17,9 @@ limitations under the License.
 package sw
 
 import (
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"errors"
 	"fmt"
 
 	"github.com/hyperledger/fabric/bccsp"
@@ -28,8 +28,9 @@ import (
 type rsaSigner struct{}
 
 func (s *rsaSigner) Sign(k bccsp.Key, digest []byte, opts bccsp.SignerOpts) ([]byte, error) {
+	// 从peer传来的opts一直是nil，因此必须设置一个相同的默认值
 	if opts == nil {
-		return nil, errors.New("Invalid options. Must be different from nil.")
+		opts = &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash, Hash: crypto.SHA256}
 	}
 
 	return k.(*rsaPrivateKey).privKey.Sign(rand.Reader, digest, opts)
@@ -38,8 +39,9 @@ func (s *rsaSigner) Sign(k bccsp.Key, digest []byte, opts bccsp.SignerOpts) ([]b
 type rsaPrivateKeyVerifier struct{}
 
 func (v *rsaPrivateKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerOpts) (bool, error) {
+	// 从peer传来的opts一直是nil，因此必须设置一个相同的默认值
 	if opts == nil {
-		return false, errors.New("Invalid options. It must not be nil.")
+		opts = &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash, Hash: crypto.SHA256}
 	}
 	switch opts.(type) {
 	case *rsa.PSSOptions:
@@ -56,8 +58,9 @@ func (v *rsaPrivateKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, op
 type rsaPublicKeyKeyVerifier struct{}
 
 func (v *rsaPublicKeyKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerOpts) (bool, error) {
+	// 从peer传来的opts一直是nil，因此必须设置一个相同的默认值
 	if opts == nil {
-		return false, errors.New("Invalid options. It must not be nil.")
+		opts = &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash, Hash: crypto.SHA256}
 	}
 	switch opts.(type) {
 	case *rsa.PSSOptions:
