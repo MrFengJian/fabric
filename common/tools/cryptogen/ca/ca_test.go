@@ -40,16 +40,17 @@ func TestLoadCertificateECDSA(t *testing.T) {
 	caDir := filepath.Join(testDir, "ca")
 	certDir := filepath.Join(testDir, "certs")
 	// generate private key
-	priv, _, err := csp.GeneratePrivateKey(certDir)
+	priv, _, err := csp.GeneratePrivateKey(certDir, "")
 	assert.NoError(t, err, "Failed to generate signed certificate")
 
 	// get EC public key
-	ecPubKey, err := csp.GetECPublicKey(priv)
+	ecPubKey, err := csp.GetPublicKey(priv)
 	assert.NoError(t, err, "Failed to generate signed certificate")
 	assert.NotNil(t, ecPubKey, "Failed to generate signed certificate")
 
 	// create our CA
-	rootCA, err := ca.NewCA(caDir, testCA3Name, testCA3Name, testCountry, testProvince, testLocality, testOrganizationalUnit, testStreetAddress, testPostalCode)
+	rootCA, err := ca.NewCA(caDir, testCA3Name, testCA3Name, testCountry, testProvince,
+		testLocality, testOrganizationalUnit, testStreetAddress, testPostalCode, "")
 	assert.NoError(t, err, "Error generating CA")
 
 	cert, err := rootCA.SignCertificate(certDir, testName3, nil, nil, ecPubKey,
@@ -61,7 +62,7 @@ func TestLoadCertificateECDSA(t *testing.T) {
 		cert.KeyUsage)
 	assert.Contains(t, cert.ExtKeyUsage, x509.ExtKeyUsageAny)
 
-	loadedCert, err := ca.LoadCertificateECDSA(certDir)
+	loadedCert, err := ca.LoadCertificate(certDir)
 	assert.NotNil(t, loadedCert, "Should load cert")
 	assert.Equal(t, cert.SerialNumber, loadedCert.SerialNumber, "Should have same serial number")
 	assert.Equal(t, cert.Subject.CommonName, loadedCert.Subject.CommonName, "Should have same CN")
@@ -71,7 +72,8 @@ func TestLoadCertificateECDSA(t *testing.T) {
 func TestNewCA(t *testing.T) {
 
 	caDir := filepath.Join(testDir, "ca")
-	rootCA, err := ca.NewCA(caDir, testCAName, testCAName, testCountry, testProvince, testLocality, testOrganizationalUnit, testStreetAddress, testPostalCode)
+	rootCA, err := ca.NewCA(caDir, testCAName, testCAName, testCountry, testProvince, testLocality,
+		testOrganizationalUnit, testStreetAddress, testPostalCode, "")
 	assert.NoError(t, err, "Error generating CA")
 	assert.NotNil(t, rootCA, "Failed to return CA")
 	assert.NotNil(t, rootCA.Signer,
@@ -106,16 +108,17 @@ func TestGenerateSignCertificate(t *testing.T) {
 	caDir := filepath.Join(testDir, "ca")
 	certDir := filepath.Join(testDir, "certs")
 	// generate private key
-	priv, _, err := csp.GeneratePrivateKey(certDir)
+	priv, _, err := csp.GeneratePrivateKey(certDir, "")
 	assert.NoError(t, err, "Failed to generate signed certificate")
 
 	// get EC public key
-	ecPubKey, err := csp.GetECPublicKey(priv)
+	ecPubKey, err := csp.GetPublicKey(priv)
 	assert.NoError(t, err, "Failed to generate signed certificate")
 	assert.NotNil(t, ecPubKey, "Failed to generate signed certificate")
 
 	// create our CA
-	rootCA, err := ca.NewCA(caDir, testCA2Name, testCA2Name, testCountry, testProvince, testLocality, testOrganizationalUnit, testStreetAddress, testPostalCode)
+	rootCA, err := ca.NewCA(caDir, testCA2Name, testCA2Name, testCountry, testProvince, testLocality,
+		testOrganizationalUnit, testStreetAddress, testPostalCode, "")
 	assert.NoError(t, err, "Error generating CA")
 
 	cert, err := rootCA.SignCertificate(certDir, testName, nil, nil, ecPubKey,
