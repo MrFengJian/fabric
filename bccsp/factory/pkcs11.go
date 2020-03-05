@@ -46,7 +46,7 @@ func InitFactories(config *FactoryOpts) error {
 func setFactories(config *FactoryOpts) error {
 	// Take some precautions on default opts
 	if config == nil {
-		config = GetDefaultOpts()
+		config = GetGMDefaultOpts()
 	}
 
 	if config.ProviderName == "" {
@@ -54,7 +54,7 @@ func setFactories(config *FactoryOpts) error {
 	}
 
 	if config.SwOpts == nil {
-		config.SwOpts = GetDefaultOpts().SwOpts
+		config.SwOpts = GetGMDefaultOpts().SwOpts
 	}
 
 	// Initialize factories map
@@ -62,7 +62,13 @@ func setFactories(config *FactoryOpts) error {
 
 	// Software-Based BCCSP
 	if config.SwOpts != nil {
-		f := &SWFactory{}
+		var f BCCSPFactory
+		// 根据配置选择工厂实现
+		if "GM" == strings.ToUpper(config.ProviderName) {
+			f = &GMFactory{}
+		} else {
+			f = &SWFactory{}
+		}
 		err := initBCCSP(f, config)
 		if err != nil {
 			factoriesInitError = errors.Wrap(err, "Failed initializing SW.BCCSP")
@@ -102,6 +108,8 @@ func GetBCCSPFromOpts(config *FactoryOpts) (bccsp.BCCSP, error) {
 	switch config.ProviderName {
 	case "SW":
 		f = &SWFactory{}
+	case "GM": // 国密工厂
+		f = &GMFactory{}
 	case "PKCS11":
 		f = &PKCS11Factory{}
 	case "PLUGIN":

@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
+	"github.com/tjfoc/gmsm/sm2"
 	"os"
 	"path/filepath"
 	"strings"
@@ -90,12 +91,12 @@ func GenerateLocalMSP(baseDir, name string, sans []string, signCA *ca.CA,
 	// write artifacts to MSP folders
 
 	// the signing CA certificate goes into cacerts
-	err = x509Export(filepath.Join(mspDir, "cacerts", x509Filename(signCA.Name)), signCA.SignCert)
+	err = x509Export(filepath.Join(mspDir, "cacerts", x509Filename(signCA.Name)), signCA.Sm2SignCert)
 	if err != nil {
 		return err
 	}
 	// the TLS CA certificate goes into tlscacerts
-	err = x509Export(filepath.Join(mspDir, "tlscacerts", x509Filename(tlsCA.Name)), tlsCA.SignCert)
+	err = x509Export(filepath.Join(mspDir, "tlscacerts", x509Filename(tlsCA.Name)), tlsCA.Sm2SignCert)
 	if err != nil {
 		return err
 	}
@@ -141,7 +142,7 @@ func GenerateLocalMSP(baseDir, name string, sans []string, signCA *ca.CA,
 	if err != nil {
 		return err
 	}
-	err = x509Export(filepath.Join(tlsDir, "ca.crt"), tlsCA.SignCert)
+	err = x509Export(filepath.Join(tlsDir, "ca.crt"), tlsCA.Sm2SignCert)
 	if err != nil {
 		return err
 	}
@@ -171,12 +172,12 @@ func GenerateVerifyingMSP(baseDir string, signCA *ca.CA, tlsCA *ca.CA, nodeOUs b
 	err := createFolderStructure(baseDir, false)
 	if err == nil {
 		// the signing CA certificate goes into cacerts
-		err = x509Export(filepath.Join(baseDir, "cacerts", x509Filename(signCA.Name)), signCA.SignCert)
+		err = x509Export(filepath.Join(baseDir, "cacerts", x509Filename(signCA.Name)), signCA.Sm2SignCert)
 		if err != nil {
 			return err
 		}
 		// the TLS CA certificate goes into tlscacerts
-		err = x509Export(filepath.Join(baseDir, "tlscacerts", x509Filename(tlsCA.Name)), tlsCA.SignCert)
+		err = x509Export(filepath.Join(baseDir, "tlscacerts", x509Filename(tlsCA.Name)), tlsCA.Sm2SignCert)
 		if err != nil {
 			return err
 		}
@@ -199,11 +200,14 @@ func GenerateVerifyingMSP(baseDir string, signCA *ca.CA, tlsCA *ca.CA, nodeOUs b
 	factory.InitFactories(nil)
 	bcsp := factory.GetDefault()
 	var opt bccsp.KeyGenOpts
-	opt = &bccsp.ECDSAP256KeyGenOpts{Temporary: false}
+	opt = &bccsp.SM2KeyGenOpts{Temporary: true}
 	if strings.ToUpper(algo) == bccsp.RSA {
-		opt = &bccsp.RSAKeyGenOpts{Temporary: false}
+		opt = &bccsp.RSAKeyGenOpts{Temporary: true}
 	}
 	priv, err := bcsp.KeyGen(opt)
+	if err != nil {
+		return err
+	}
 	pubKey, err := csp.GetPublicKey(priv)
 	if err != nil {
 		return err
@@ -244,7 +248,7 @@ func x509Filename(name string) string {
 	return name + "-cert.pem"
 }
 
-func x509Export(path string, cert *x509.Certificate) error {
+func x509Export(path string, cert *sm2.Certificate) error {
 	return pemExport(path, "CERTIFICATE", cert.Raw)
 }
 

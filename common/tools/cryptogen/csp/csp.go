@@ -7,8 +7,8 @@ package csp
 
 import (
 	"crypto"
-	"crypto/x509"
 	"encoding/pem"
+	"github.com/tjfoc/gmsm/sm2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -21,15 +21,15 @@ import (
 )
 
 // LoadPrivateKey loads a private key from file in keystorePath
-func LoadPrivateKey(keystorePath string) (bccsp.Key, crypto.Signer, error) {
+func LoadPrivateKey(keystorePath string, algo string) (bccsp.Key, crypto.Signer, error) {
 	var err error
 	var priv bccsp.Key
 	var s crypto.Signer
 
 	opts := &factory.FactoryOpts{
-		ProviderName: "SW",
+		ProviderName: "GM",
 		SwOpts: &factory.SwOpts{
-			HashFamily: "SHA2",
+			HashFamily: bccsp.SM3,
 			SecLevel:   256,
 
 			FileKeystore: &factory.FileKeystoreOpts{
@@ -54,7 +54,14 @@ func LoadPrivateKey(keystorePath string) (bccsp.Key, crypto.Signer, error) {
 			if block == nil {
 				return errors.Errorf("%s: wrong PEM encoding", path)
 			}
-			priv, err = csp.KeyImport(block.Bytes, &bccsp.ECDSAPrivateKeyImportOpts{Temporary: true})
+			//priv, err = csp.KeyImport(block.Bytes, &bccsp.ECDSAPrivateKeyImportOpts{Temporary: true})
+			var opt bccsp.KeyImportOpts
+			if bccsp.RSA == strings.ToUpper(algo) {
+				opt = &bccsp.RSA2048PrivateKeyImportOpts{Temporary: true}
+			} else {
+				opt = &bccsp.SM2PrivateKeyImportOpts{Temporary: true}
+			}
+			priv, err = csp.KeyImport(block.Bytes, opt)
 			if err != nil {
 				return err
 			}
@@ -86,9 +93,9 @@ func GeneratePrivateKey(keystorePath string, algo string) (bccsp.Key,
 	var s crypto.Signer
 
 	opts := &factory.FactoryOpts{
-		ProviderName: "SW",
+		ProviderName: "GM",
 		SwOpts: &factory.SwOpts{
-			HashFamily: "SHA2",
+			HashFamily: bccsp.SM3,
 			SecLevel:   256,
 
 			FileKeystore: &factory.FileKeystoreOpts{
@@ -100,7 +107,7 @@ func GeneratePrivateKey(keystorePath string, algo string) (bccsp.Key,
 	if err == nil {
 		// 根据算法参数设置私钥生成参数，目前只使用RSA2048
 		var opt bccsp.KeyGenOpts
-		opt = &bccsp.ECDSAP256KeyGenOpts{Temporary: false}
+		opt = &bccsp.SM2KeyGenOpts{Temporary: false}
 		if strings.ToUpper(algo) == bccsp.RSA {
 			opt = &bccsp.RSAKeyGenOpts{Temporary: false}
 		}
@@ -127,9 +134,31 @@ func GetPublicKey(priv bccsp.Key) (interface{}, error) {
 		return nil, err
 	}
 	// unmarshal using pkix
-	lowLevelKey, err := x509.ParsePKIXPublicKey(pubKeyBytes)
+	lowLevelKey, err := sm2.ParsePKIXPublicKey(pubKeyBytes)
 	if err != nil {
 		return nil, err
 	}
 	return lowLevelKey, nil
+}
+
+func GetSM2PublicKey(priv bccsp.Key) (*sm2.PublicKey, error) {
+
+	// get the public key
+	pubKey, err := priv.PublicKey()
+	if err != nil {
+		return nil, err
+	}
+
+	// marshal to bytes
+	pubKeyBytes, err := pubKey.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	// unmarshal using pkix
+	sm2PubKey, err := sm2.ParseSm2PublicKey(pubKeyBytes)
+	//ecPubKey, err := x509.ParsePKIXPublicKey(pubKeyBytes)
+	if err != nil {
+		return nil, err
+	}
+	return sm2PubKey, nil
 }

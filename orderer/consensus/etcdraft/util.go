@@ -8,9 +8,9 @@ package etcdraft
 
 import (
 	"bytes"
-	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/tjfoc/gmsm/sm2"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -437,7 +437,7 @@ func validateCert(pemData []byte, certRole string) error {
 		return errors.Errorf("%s TLS certificate is not PEM encoded: %s", certRole, string(pemData))
 	}
 
-	if _, err := x509.ParseCertificate(bl.Bytes); err != nil {
+	if _, err := sm2.ParseCertificate(bl.Bytes); err != nil {
 		return errors.Errorf("%s TLS certificate has invalid ASN1 structure, %v: %s", certRole, err, string(pemData))
 	}
 	return nil

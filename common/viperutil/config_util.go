@@ -311,7 +311,7 @@ func bccspHook(f reflect.Type, t reflect.Type, data interface{}) (interface{}, e
 		return data, nil
 	}
 
-	config := factory.GetDefaultOpts()
+	config := factory.GetGMDefaultOpts()
 
 	err := mapstructure.Decode(data, config)
 	if err != nil {

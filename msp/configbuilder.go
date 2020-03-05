@@ -135,12 +135,12 @@ const (
 
 func SetupBCCSPKeystoreConfig(bccspConfig *factory.FactoryOpts, keystoreDir string) *factory.FactoryOpts {
 	if bccspConfig == nil {
-		bccspConfig = factory.GetDefaultOpts()
+		bccspConfig = factory.GetGMDefaultOpts()
 	}
 
 	if bccspConfig.ProviderName == "SW" {
 		if bccspConfig.SwOpts == nil {
-			bccspConfig.SwOpts = factory.GetDefaultOpts().SwOpts
+			bccspConfig.SwOpts = factory.GetGMDefaultOpts().SwOpts
 		}
 
 		// Only override the KeyStorePath if it was left empty

@@ -237,7 +237,7 @@ var Defaults = TopLevel{
 		},
 		LocalMSPDir: "msp",
 		LocalMSPID:  "SampleOrg",
-		BCCSP:       bccsp.GetDefaultOpts(),
+		BCCSP:       bccsp.GetGMDefaultOpts(),
 		Authentication: Authentication{
 			TimeWindow: time.Duration(15 * time.Minute),
 		},
