@@ -17,6 +17,7 @@ package gm
 
 import (
 	"bytes"
+	"crypto/rsa"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -135,6 +136,8 @@ func (ks *fileBasedKeyStore) GetKey(ski []byte) (k bccsp.Key, err error) {
 		switch key.(type) {
 		case *sm2.PrivateKey:
 			return &sm2PrivateKey{key.(*sm2.PrivateKey)}, nil
+		case *rsa.PrivateKey:
+			return &rsaPrivateKey{key.(*rsa.PrivateKey)}, nil
 		default:
 			return nil, errors.New("Secret key type not recognized")
 		}
@@ -148,6 +151,8 @@ func (ks *fileBasedKeyStore) GetKey(ski []byte) (k bccsp.Key, err error) {
 		switch key.(type) {
 		case *sm2.PublicKey:
 			return &sm2PublicKey{key.(*sm2.PublicKey)}, nil
+		case *rsa.PublicKey:
+			return &rsaPublicKey{key.(*rsa.PublicKey)}, nil
 		default:
 			return nil, errors.New("Public key type not recognized")
 		}
@@ -190,6 +195,21 @@ func (ks *fileBasedKeyStore) StoreKey(k bccsp.Key) (err error) {
 		err = ks.storeKey(hex.EncodeToString(k.SKI()), kk.privKey)
 		if err != nil {
 			return fmt.Errorf("Failed storing SM4 key [%s]", err)
+		}
+	case *rsaPrivateKey:
+		kk := k.(*rsaPrivateKey)
+
+		err = ks.storePrivateKey(hex.EncodeToString(k.SKI()), kk.privKey)
+		if err != nil {
+			return fmt.Errorf("Failed storing RSA private key [%s]", err)
+		}
+
+	case *rsaPublicKey:
+		kk := k.(*rsaPublicKey)
+
+		err = ks.storePublicKey(hex.EncodeToString(k.SKI()), kk.pubKey)
+		if err != nil {
+			return fmt.Errorf("Failed storing RSA public key [%s]", err)
 		}
 	default:
 		return fmt.Errorf("Key type not reconigned [%s]", k)

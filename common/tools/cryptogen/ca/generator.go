@@ -83,7 +83,7 @@ func NewCA(baseDir, org, name, country, province, locality, orgUnit, streetAddre
 
 				sm2cert.PublicKey = pubKey
 
-				x509Cert, err := genCertificateGMSM2(baseDir, name, sm2cert, sm2cert, pubKey.(*sm2.PublicKey), priv)
+				x509Cert, err := genCertificateSM2(baseDir, name, sm2cert, sm2cert, pubKey.(*sm2.PublicKey), priv)
 				response = err
 				if err == nil {
 					ca = &CA{
@@ -136,7 +136,7 @@ func (ca *CA) SignCertificate(baseDir, name string, ous, sans []string, pub inte
 	//cert, err := genCertificate(baseDir, name, &template, ca.SignCert,
 	//	pub, ca.Signer)
 	sm2Tpl := gm.ParseX509Certificate2Sm2(&template)
-	cert, err := genCertificateGMSM2(baseDir, name, sm2Tpl, ca.Sm2SignCert, pub.(*sm2.PublicKey), ca.Sm2Key)
+	cert, err := genCertificateSM2(baseDir, name, sm2Tpl, ca.Sm2SignCert, pub.(*sm2.PublicKey), ca.Sm2Key)
 
 	if err != nil {
 		return nil, err
@@ -258,7 +258,7 @@ func LoadCertificate(certPath string) (*x509.Certificate, error) {
 }
 
 //generate a signed X509 certficate using SM2
-func genCertificateGMSM2(baseDir, name string, template, parent *sm2.Certificate, pub *sm2.PublicKey,
+func genCertificateSM2(baseDir, name string, template, parent *sm2.Certificate, pub *sm2.PublicKey,
 	key bccsp.Key) (*sm2.Certificate, error) {
 	//create the x509 public cert
 	certBytes, err := gm.CreateCertificateToMem(template, parent, key)
@@ -292,8 +292,8 @@ func genCertificateGMSM2(baseDir, name string, template, parent *sm2.Certificate
 
 }
 
-// LoadCertificateGMSM2 load a ecdsa cert from a file in cert path
-func LoadCertificateGMSM2(certPath string) (*sm2.Certificate, error) {
+// LoadCertificateSM2 load a ecdsa cert from a file in cert path
+func LoadCertificateSM2(certPath string) (*sm2.Certificate, error) {
 	var cert *sm2.Certificate
 	var err error
 

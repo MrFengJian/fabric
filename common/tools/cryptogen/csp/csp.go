@@ -7,6 +7,7 @@ package csp
 
 import (
 	"crypto"
+	"crypto/x509"
 	"encoding/pem"
 	"github.com/tjfoc/gmsm/sm2"
 	"io/ioutil"
@@ -136,7 +137,11 @@ func GetPublicKey(priv bccsp.Key) (interface{}, error) {
 	// unmarshal using pkix
 	lowLevelKey, err := sm2.ParsePKIXPublicKey(pubKeyBytes)
 	if err != nil {
-		return nil, err
+		// 可能是RSA算法
+		lowLevelKey, err = x509.ParsePKIXPublicKey(pubKeyBytes)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return lowLevelKey, nil
 }

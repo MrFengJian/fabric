@@ -71,12 +71,12 @@ func UnmarshalSM2Signature(raw []byte) (*big.Int, *big.Int, error) {
 	return sig.R, sig.S, nil
 }
 
-func signGMSM2(k *sm2.PrivateKey, digest []byte, opts bccsp.SignerOpts) (signature []byte, err error) {
+func signSM2(k *sm2.PrivateKey, digest []byte, opts bccsp.SignerOpts) (signature []byte, err error) {
 	signature, err = k.Sign(rand.Reader, digest, opts)
 	return
 }
 
-func verifyGMSM2(k *sm2.PublicKey, signature, digest []byte, opts bccsp.SignerOpts) (valid bool, err error) {
+func verifySM2(k *sm2.PublicKey, signature, digest []byte, opts bccsp.SignerOpts) (valid bool, err error) {
 	valid = k.Verify(digest, signature)
 	return
 }
@@ -84,7 +84,7 @@ func verifyGMSM2(k *sm2.PublicKey, signature, digest []byte, opts bccsp.SignerOp
 type sm2Signer struct{}
 
 func (s *sm2Signer) Sign(k bccsp.Key, digest []byte, opts bccsp.SignerOpts) (signature []byte, err error) {
-	return signGMSM2(k.(*sm2PrivateKey).privKey, digest, opts)
+	return signSM2(k.(*sm2PrivateKey).privKey, digest, opts)
 }
 
 type ecdsaPrivateKeySigner struct{}
@@ -103,19 +103,19 @@ func (s *ecdsaPrivateKeySigner) Sign(k bccsp.Key, digest []byte, opts bccsp.Sign
 		PublicKey: sm2pk,
 	}
 
-	return signGMSM2(&sm2privKey, digest, opts)
+	return signSM2(&sm2privKey, digest, opts)
 }
 
 type sm2PrivateKeyVerifier struct{}
 
 func (v *sm2PrivateKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerOpts) (valid bool, err error) {
-	return verifyGMSM2(&(k.(*sm2PrivateKey).privKey.PublicKey), signature, digest, opts)
+	return verifySM2(&(k.(*sm2PrivateKey).privKey.PublicKey), signature, digest, opts)
 }
 
 type sm2PublicKeyKeyVerifier struct{}
 
 func (v *sm2PublicKeyKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerOpts) (valid bool, err error) {
-	return verifyGMSM2(k.(*sm2PublicKey).pubKey, signature, digest, opts)
+	return verifySM2(k.(*sm2PublicKey).pubKey, signature, digest, opts)
 }
 
 // 转换ecdsa的私钥为sm2的私钥
@@ -128,7 +128,7 @@ func (v *ecdsaPrivateKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, 
 		X:     puk.X,
 		Y:     puk.Y,
 	}
-	return verifyGMSM2(&sm2pk, signature, digest, opts)
+	return verifySM2(&sm2pk, signature, digest, opts)
 }
 
 type ecdsaPublicKeyKeyVerifier struct{}
@@ -140,5 +140,5 @@ func (v *ecdsaPublicKeyKeyVerifier) Verify(k bccsp.Key, signature, digest []byte
 		X:     puk.X,
 		Y:     puk.Y,
 	}
-	return verifyGMSM2(&sm2pk, signature, digest, opts)
+	return verifySM2(&sm2pk, signature, digest, opts)
 }

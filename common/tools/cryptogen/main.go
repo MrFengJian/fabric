@@ -730,7 +730,7 @@ func getCA(caDir string, spec OrgSpec, name string) *ca.CA {
 	if err != nil {
 		panic(err)
 	}
-	cert, _ := ca.LoadCertificateGMSM2(caDir)
+	cert, _ := ca.LoadCertificateSM2(caDir)
 
 	return &ca.CA{
 		Name:               name,

@@ -17,6 +17,7 @@ package gm
 
 import (
 	"crypto/ecdsa"
+	"crypto/rsa"
 	"errors"
 	"fmt"
 	"reflect"
@@ -233,4 +234,41 @@ func (ki *x509PublicKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bc
 	// default:
 	// 	return nil, errors.New("Certificate's public key type not recognized. Supported keys: [ECDSA, RSA]")
 	// }
+}
+
+// 仿照ecdsa的处理逻辑，增加RSA私钥导入配置
+type rsaPrivatekeyImportOptsKeyImporter struct {
+}
+
+func (*rsaPrivatekeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bccsp.KeyImportOpts) (bccsp.Key, error) {
+	der, ok := raw.([]byte)
+	if !ok {
+		return nil, errors.New("[RSA2048PrivateKeyImportOpts] Invalid raw material. Expected byte array.")
+	}
+
+	if len(der) == 0 {
+		return nil, errors.New("[RSA2048PrivateKeyImportOpts] Invalid raw. It must not be nil.")
+	}
+
+	lowLevelKey, err := utils.DERToPrivateKey(der)
+	if err != nil {
+		return nil, fmt.Errorf("Failed converting PKIX to rsa public key [%s]", err)
+	}
+
+	rsaSK, ok := lowLevelKey.(*rsa.PrivateKey)
+	if !ok {
+		return nil, errors.New("Failed casting to rsa private key. Invalid raw material.")
+	}
+	return &rsaPrivateKey{rsaSK}, nil
+}
+
+type rsaGoPublicKeyImportOptsKeyImporter struct{}
+
+func (*rsaGoPublicKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bccsp.KeyImportOpts) (bccsp.Key, error) {
+	lowLevelKey, ok := raw.(*rsa.PublicKey)
+	if !ok {
+		return nil, errors.New("Invalid raw material. Expected *rsa.PublicKey.")
+	}
+
+	return &rsaPublicKey{lowLevelKey}, nil
 }

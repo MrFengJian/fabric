@@ -76,6 +76,8 @@ func New(securityLevel int, hashFamily string, keyStore bccsp.KeyStore) (bccsp.B
 	signers := make(map[reflect.Type]Signer)
 	signers[reflect.TypeOf(&sm2PrivateKey{})] = &sm2Signer{} //sm2 国密签名
 	signers[reflect.TypeOf(&ecdsaPrivateKey{})] = &ecdsaPrivateKeySigner{}
+	// rsa签名
+	signers[reflect.TypeOf(&rsaPrivateKey{})] = &rsaSigner{}
 
 	// Set the verifiers
 	verifiers := make(map[reflect.Type]Verifier)
@@ -83,11 +85,14 @@ func New(securityLevel int, hashFamily string, keyStore bccsp.KeyStore) (bccsp.B
 	verifiers[reflect.TypeOf(&sm2PublicKey{})] = &sm2PublicKeyKeyVerifier{} //sm2 公钥验签
 	verifiers[reflect.TypeOf(&ecdsaPrivateKey{})] = &ecdsaPrivateKeyVerifier{}
 	verifiers[reflect.TypeOf(&ecdsaPublicKey{})] = &ecdsaPublicKeyKeyVerifier{}
+	// rsa验签
+	verifiers[reflect.TypeOf(&rsaPrivateKey{})] = &rsaPrivateKeyVerifier{}
+	verifiers[reflect.TypeOf(&rsaPublicKey{})] = &rsaPublicKeyKeyVerifier{}
 
 	// Set the hashers
 	hashers := make(map[reflect.Type]Hasher)
 	hashers[reflect.TypeOf(&bccsp.SHAOpts{})] = &hasher{hash: conf.hashFunction}
-	hashers[reflect.TypeOf(&bccsp.GMSM3Opts{})] = &hasher{hash: sm3.New} //sm3 Hash选项
+	hashers[reflect.TypeOf(&bccsp.SM3Opts{})] = &hasher{hash: sm3.New} //sm3 Hash选项
 	hashers[reflect.TypeOf(&bccsp.SHA256Opts{})] = &hasher{hash: sha256.New}
 	hashers[reflect.TypeOf(&bccsp.SHA384Opts{})] = &hasher{hash: sha512.New384}
 	hashers[reflect.TypeOf(&bccsp.SHA3_256Opts{})] = &hasher{hash: sha3.New256}
@@ -106,6 +111,12 @@ func New(securityLevel int, hashFamily string, keyStore bccsp.KeyStore) (bccsp.B
 	keyGenerators := make(map[reflect.Type]KeyGenerator)
 	keyGenerators[reflect.TypeOf(&bccsp.SM2KeyGenOpts{})] = &sm2KeyGenerator{}
 	keyGenerators[reflect.TypeOf(&bccsp.SM4KeyGenOpts{})] = &sm4KeyGenerator{length: 32}
+	// RSA 密钥生成
+	keyGenerators[reflect.TypeOf(&bccsp.RSAKeyGenOpts{})] = &rsaKeyGenerator{length: conf.rsaBitLength}
+	keyGenerators[reflect.TypeOf(&bccsp.RSA1024KeyGenOpts{})] = &rsaKeyGenerator{length: 1024}
+	keyGenerators[reflect.TypeOf(&bccsp.RSA2048KeyGenOpts{})] = &rsaKeyGenerator{length: 2048}
+	keyGenerators[reflect.TypeOf(&bccsp.RSA3072KeyGenOpts{})] = &rsaKeyGenerator{length: 3072}
+	keyGenerators[reflect.TypeOf(&bccsp.RSA4096KeyGenOpts{})] = &rsaKeyGenerator{length: 4096}
 	impl.keyGenerators = keyGenerators
 
 	// Set the key derivers
@@ -121,6 +132,8 @@ func New(securityLevel int, hashFamily string, keyStore bccsp.KeyStore) (bccsp.B
 	keyImporters[reflect.TypeOf(&bccsp.ECDSAGoPublicKeyImportOpts{})] = &ecdsaGoPublicKeyImportOptsKeyImporter{}
 	keyImporters[reflect.TypeOf(&bccsp.ECDSAPrivateKeyImportOpts{})] = &ecdsaPrivateKeyImportOptsKeyImporter{}
 	keyImporters[reflect.TypeOf(&bccsp.ECDSAPKIXPublicKeyImportOpts{})] = &ecdsaPKIXPublicKeyImportOptsKeyImporter{}
+	// 添加RSA私钥导入支持
+	keyImporters[reflect.TypeOf(&bccsp.RSA2048PrivateKeyImportOpts{})] = &rsaPrivatekeyImportOptsKeyImporter{}
 
 	impl.keyImporters = keyImporters
 	return impl, nil

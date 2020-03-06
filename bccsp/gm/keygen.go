@@ -16,6 +16,8 @@ limitations under the License.
 package gm
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"fmt"
 
 	"github.com/hyperledger/fabric/bccsp"
@@ -48,4 +50,18 @@ func (gm *sm4KeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (k bccsp.Key, err error
 	}
 
 	return &sm4PrivateKey{lowLevelKey, false}, nil
+}
+
+type rsaKeyGenerator struct {
+	length int
+}
+
+func (kg *rsaKeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
+	lowLevelKey, err := rsa.GenerateKey(rand.Reader, int(kg.length))
+
+	if err != nil {
+		return nil, fmt.Errorf("Failed generating RSA %d key [%s]", kg.length, err)
+	}
+
+	return &rsaPrivateKey{lowLevelKey}, nil
 }
