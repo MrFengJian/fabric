@@ -174,7 +174,6 @@ func (ki *x509PublicKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bc
 
 	switch pk.(type) {
 	case sm2.PublicKey:
-		fmt.Printf("bccsp gm keyimport pk is sm2.PublicKey")
 		sm2PublickKey, ok := pk.(sm2.PublicKey)
 		if !ok {
 			return nil, errors.New("Parse interface []  to sm2 pk error")
@@ -188,7 +187,6 @@ func (ki *x509PublicKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bc
 			der,
 			&bccsp.SM2PublicKeyImportOpts{Temporary: opts.Ephemeral()})
 	case *sm2.PublicKey:
-		fmt.Printf("bccsp gm keyimport pk is *sm2.PublicKey")
 		sm2PublickKey, ok := pk.(*sm2.PublicKey)
 		if !ok {
 			return nil, errors.New("Parse interface []  to sm2 pk error")
@@ -209,7 +207,7 @@ func (ki *x509PublicKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bc
 			pk,
 			&bccsp.RSAGoPublicKeyImportOpts{Temporary: opts.Ephemeral()})
 	default:
-		return nil, errors.New("Certificate's public key type not recognized. Supported keys: [ECDSA, RSA]")
+		return nil, errors.New("Certificate's public key type not recognized. Supported keys: [ECDSA, RSA,SM2]")
 	}
 }
 

@@ -16,7 +16,6 @@ limitations under the License.
 package gm
 
 import (
-	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/asn1"
@@ -147,7 +146,7 @@ func (v *ecdsaPublicKeyKeyVerifier) Verify(k bccsp.Key, signature, digest []byte
 	return verifyGMSM2(&sm2pk, signature, digest, opts)
 }
 
-func SignatureToLowS(k *ecdsa.PublicKey, signature []byte) ([]byte, error) {
+func SignatureToLowS(k *sm2.PublicKey, signature []byte) ([]byte, error) {
 	r, s, err := UnmarshalSM2Signature(signature)
 	if err != nil {
 		return nil, err
@@ -164,7 +163,7 @@ func SignatureToLowS(k *ecdsa.PublicKey, signature []byte) ([]byte, error) {
 	return signature, nil
 }
 
-func ToLowS(k *ecdsa.PublicKey, s *big.Int) (*big.Int, bool, error) {
+func ToLowS(k *sm2.PublicKey, s *big.Int) (*big.Int, bool, error) {
 	lowS, err := IsLowS(k, s)
 	if err != nil {
 		return nil, false, err
@@ -182,7 +181,7 @@ func ToLowS(k *ecdsa.PublicKey, s *big.Int) (*big.Int, bool, error) {
 }
 
 // IsLow checks that s is a low-S
-func IsLowS(k *ecdsa.PublicKey, s *big.Int) (bool, error) {
+func IsLowS(k *sm2.PublicKey, s *big.Int) (bool, error) {
 	halfOrder, ok := curveHalfOrders[k.Curve]
 	if !ok {
 		return false, fmt.Errorf("Curve not recognized [%s]", k.Curve)
