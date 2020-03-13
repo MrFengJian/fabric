@@ -40,13 +40,13 @@ func NewDefaultSecurityLevel(keyStorePath string) (bccsp.BCCSP, error) {
 		return nil, errors.Wrapf(err, "Failed initializing key store at [%v]", keyStorePath)
 	}
 
-	return New(256, "SHA2", ks)
+	return New(256, bccsp.SM3, ks)
 }
 
 // NewDefaultSecurityLevel returns a new instance of the software-based BCCSP
 // at security level 256, hash family SHA2 and using the passed KeyStore.
 func NewDefaultSecurityLevelWithKeystore(keyStore bccsp.KeyStore) (bccsp.BCCSP, error) {
-	return New(256, "SHA2", keyStore)
+	return New(256, bccsp.SM3, keyStore)
 }
 
 // New 实例化 返回支持国密算法的 bccsp.BCCSP
@@ -87,7 +87,7 @@ func New(securityLevel int, hashFamily string, keyStore bccsp.KeyStore) (bccsp.B
 	// Set the hashers
 	hashers := make(map[reflect.Type]Hasher)
 	hashers[reflect.TypeOf(&bccsp.SHAOpts{})] = &hasher{hash: conf.hashFunction}
-	hashers[reflect.TypeOf(&bccsp.GMSM3Opts{})] = &hasher{hash: sm3.New} //sm3 Hash选项
+	hashers[reflect.TypeOf(&bccsp.SM3Opts{})] = &hasher{hash: sm3.New} //sm3 Hash选项
 	hashers[reflect.TypeOf(&bccsp.SHA256Opts{})] = &hasher{hash: sha256.New}
 	hashers[reflect.TypeOf(&bccsp.SHA384Opts{})] = &hasher{hash: sha512.New384}
 	hashers[reflect.TypeOf(&bccsp.SHA3_256Opts{})] = &hasher{hash: sha3.New256}

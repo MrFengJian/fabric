@@ -18,7 +18,6 @@ package msp
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -85,7 +84,7 @@ func sanitizeECDSASignedCert(cert *sm2.Certificate, parentCert *sm2.Certificate)
 		return nil, errors.New("parent certificate must be different from nil")
 	}
 
-	expectedSig, err := gm.SignatureToLowS(parentCert.PublicKey.(*ecdsa.PublicKey), cert.Signature)
+	expectedSig, err := gm.SignatureToLowS(parentCert.PublicKey.(*sm2.PublicKey), cert.Signature)
 	if err != nil {
 		return nil, err
 	}

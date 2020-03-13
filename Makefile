@@ -442,6 +442,12 @@ docker-tag-rsa: $(IMAGES:%=%-docker-tag-rsa)
 	$(eval TARGET = ${patsubst %-docker-tag-rsa,%,${@}})
 	docker tag $(DOCKER_NS)/fabric-$(TARGET):$(DOCKER_TAG) $(DOCKER_NS)/fabric-$(TARGET):$(BASE_VERSION)-rsa
 
+docker-tag-sm: $(IMAGES:%=%-docker-tag-sm)
+
+%-docker-tag-sm:
+	$(eval TARGET = ${patsubst %-docker-tag-sm,%,${@}})
+	docker tag $(DOCKER_NS)/fabric-$(TARGET):$(DOCKER_TAG) $(DOCKER_NS)/fabric-$(TARGET):$(BASE_VERSION)-sm	
+
 .PHONY: clean
 clean: docker-clean unit-test-clean release-clean
 	-@rm -rf $(BUILD_DIR)

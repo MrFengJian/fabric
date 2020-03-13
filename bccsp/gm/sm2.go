@@ -16,7 +16,6 @@ limitations under the License.
 package gm
 
 import (
-	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/asn1"
@@ -76,12 +75,12 @@ func UnmarshalSM2Signature(raw []byte) (*big.Int, *big.Int, error) {
 	return sig.R, sig.S, nil
 }
 
-func signGMSM2(k *sm2.PrivateKey, digest []byte, opts bccsp.SignerOpts) (signature []byte, err error) {
+func signSM2(k *sm2.PrivateKey, digest []byte, opts bccsp.SignerOpts) (signature []byte, err error) {
 	signature, err = k.Sign(rand.Reader, digest, opts)
 	return
 }
 
-func verifyGMSM2(k *sm2.PublicKey, signature, digest []byte, opts bccsp.SignerOpts) (valid bool, err error) {
+func verifySM2(k *sm2.PublicKey, signature, digest []byte, opts bccsp.SignerOpts) (valid bool, err error) {
 	valid = k.Verify(digest, signature)
 	return
 }
@@ -89,7 +88,7 @@ func verifyGMSM2(k *sm2.PublicKey, signature, digest []byte, opts bccsp.SignerOp
 type sm2Signer struct{}
 
 func (s *sm2Signer) Sign(k bccsp.Key, digest []byte, opts bccsp.SignerOpts) (signature []byte, err error) {
-	return signGMSM2(k.(*sm2PrivateKey).privKey, digest, opts)
+	return signSM2(k.(*sm2PrivateKey).privKey, digest, opts)
 }
 
 type ecdsaPrivateKeySigner struct{}
@@ -108,19 +107,19 @@ func (s *ecdsaPrivateKeySigner) Sign(k bccsp.Key, digest []byte, opts bccsp.Sign
 		PublicKey: sm2pk,
 	}
 
-	return signGMSM2(&sm2privKey, digest, opts)
+	return signSM2(&sm2privKey, digest, opts)
 }
 
 type sm2PrivateKeyVerifier struct{}
 
 func (v *sm2PrivateKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerOpts) (valid bool, err error) {
-	return verifyGMSM2(&(k.(*sm2PrivateKey).privKey.PublicKey), signature, digest, opts)
+	return verifySM2(&(k.(*sm2PrivateKey).privKey.PublicKey), signature, digest, opts)
 }
 
 type sm2PublicKeyKeyVerifier struct{}
 
 func (v *sm2PublicKeyKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerOpts) (valid bool, err error) {
-	return verifyGMSM2(k.(*sm2PublicKey).pubKey, signature, digest, opts)
+	return verifySM2(k.(*sm2PublicKey).pubKey, signature, digest, opts)
 }
 
 type ecdsaPrivateKeyVerifier struct{}
@@ -132,7 +131,7 @@ func (v *ecdsaPrivateKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, 
 		X:     puk.X,
 		Y:     puk.Y,
 	}
-	return verifyGMSM2(&sm2pk, signature, digest, opts)
+	return verifySM2(&sm2pk, signature, digest, opts)
 }
 
 type ecdsaPublicKeyKeyVerifier struct{}
@@ -144,10 +143,10 @@ func (v *ecdsaPublicKeyKeyVerifier) Verify(k bccsp.Key, signature, digest []byte
 		X:     puk.X,
 		Y:     puk.Y,
 	}
-	return verifyGMSM2(&sm2pk, signature, digest, opts)
+	return verifySM2(&sm2pk, signature, digest, opts)
 }
 
-func SignatureToLowS(k *ecdsa.PublicKey, signature []byte) ([]byte, error) {
+func SignatureToLowS(k *sm2.PublicKey, signature []byte) ([]byte, error) {
 	r, s, err := UnmarshalSM2Signature(signature)
 	if err != nil {
 		return nil, err
@@ -164,7 +163,7 @@ func SignatureToLowS(k *ecdsa.PublicKey, signature []byte) ([]byte, error) {
 	return signature, nil
 }
 
-func ToLowS(k *ecdsa.PublicKey, s *big.Int) (*big.Int, bool, error) {
+func ToLowS(k *sm2.PublicKey, s *big.Int) (*big.Int, bool, error) {
 	lowS, err := IsLowS(k, s)
 	if err != nil {
 		return nil, false, err
@@ -182,7 +181,7 @@ func ToLowS(k *ecdsa.PublicKey, s *big.Int) (*big.Int, bool, error) {
 }
 
 // IsLow checks that s is a low-S
-func IsLowS(k *ecdsa.PublicKey, s *big.Int) (bool, error) {
+func IsLowS(k *sm2.PublicKey, s *big.Int) (bool, error) {
 	halfOrder, ok := curveHalfOrders[k.Curve]
 	if !ok {
 		return false, fmt.Errorf("Curve not recognized [%s]", k.Curve)
