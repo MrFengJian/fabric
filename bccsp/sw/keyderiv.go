@@ -21,20 +21,10 @@ import (
 	"crypto/hmac"
 	"errors"
 	"fmt"
-	"github.com/tjfoc/gmsm/sm2"
 	"math/big"
 
 	"github.com/hyperledger/fabric/bccsp"
 )
-
-//定义国密 Key的驱动 ，实现 KeyDeriver 接口
-type smPublicKeyKeyDeriver struct{}
-
-func (kd *smPublicKeyKeyDeriver) KeyDeriv(k bccsp.Key, opts bccsp.KeyDerivOpts) (dk bccsp.Key, err error) {
-
-	return nil, errors.New("Not implemented")
-
-}
 
 type ecdsaPublicKeyKeyDeriver struct{}
 
@@ -162,32 +152,4 @@ func (kd *aesPrivateKeyKeyDeriver) KeyDeriv(k bccsp.Key, opts bccsp.KeyDerivOpts
 	default:
 		return nil, fmt.Errorf("Unsupported 'KeyDerivOpts' provided [%v]", opts)
 	}
-}
-
-//定义国密SM2 keygen 结构体，实现 KeyGenerator 接口
-type sm2KeyGenerator struct {
-}
-
-func (gm *sm2KeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (k bccsp.Key, err error) {
-	//调用 SM2的注册证书方法
-	privKey, err := sm2.GenerateKey()
-	if err != nil {
-		return nil, fmt.Errorf("Failed generating SM2 key  [%s]", err)
-	}
-
-	return &sm2PrivateKey{privKey}, nil
-}
-
-//定义国密SM4 keygen 结构体，实现 KeyGenerator 接口
-type sm4KeyGenerator struct {
-	length int
-}
-
-func (gm *sm4KeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (k bccsp.Key, err error) {
-	lowLevelKey, err := GetRandomBytes(int(gm.length))
-	if err != nil {
-		return nil, fmt.Errorf("Failed generating SM4 %d key [%s]", gm.length, err)
-	}
-
-	return &sm4PrivateKey{lowLevelKey, false}, nil
 }

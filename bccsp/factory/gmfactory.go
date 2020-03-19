@@ -4,6 +4,7 @@ package factory
 import (
 	"errors"
 	"fmt"
+	"runtime/debug"
 
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/gm"
@@ -37,6 +38,7 @@ func (f *GMFactory) Get(config *FactoryOpts) (bccsp.BCCSP, error) {
 	} else if gmOpts.FileKeystore != nil {
 		fks, err := gm.NewFileBasedKeyStore(nil, gmOpts.FileKeystore.KeyStorePath, false)
 		if err != nil {
+			debug.PrintStack()
 			return nil, fmt.Errorf("Failed to initialize gm software key store: %s", err)
 		}
 		ks = fks
